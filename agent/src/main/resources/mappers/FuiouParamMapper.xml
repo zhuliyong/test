@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.FuiouParamMapper" >
+
+
+  <!--新增-->
+  <insert id="insert" parameterType="com.vicmob.domain.FuiouParamPo"  useGeneratedKeys="true"  keyProperty="fId"   >
+    insert into store_fuioupay
+    (
+    mchnt_cd,
+    store_id,
+    contract_rate
+    )
+    values
+    (
+    #{mchntCd},
+    #{storeId},
+    #{contractRate}
+    )
+  </insert>
+
+  <update id="edit" parameterType="com.vicmob.domain.FuiouParamPo" >
+    update store_fuioupay
+    set mchnt_cd =  #{mchntCd},
+    contract_rate = #{contractRate}
+    where f_id = #{fId}
+
+  </update>
+
+
+  <delete id="del">
+    delete from store_fuioupay where f_id = #{fId}
+  </delete>
+
+</mapper>

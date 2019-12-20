@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.SysAgentsMapper">
+
+
+    <select id="findById" parameterType="Integer" resultType="com.vicmob.domain.SysAgent">
+        select
+         agent_id as  agentId,
+         agent_name as agentName ,
+         nick_name as nickName,
+         contacts_name as contactsName,
+         contacts_phone as contactsPhone,
+         agent_mail as agentMail,
+         agent_province as agentProvince,
+         agent_city as agentCity,
+         agent_area as agentArea,
+         agent_address as agentAddress,
+         parent_agentId as parentAgentId,
+         create_time as createTime,
+         profit_point as profitPoint,
+         agent_level as agentLevel
+         from  sys_agent
+         where agent_id = #{agentId}
+         and delete_flag = 0
+    </select>
+
+
+    <insert id="insert" parameterType="com.vicmob.domain.SysAgent" useGeneratedKeys="true" keyProperty="agentId">
+        insert into sys_agent
+        (
+         agent_name,
+         nick_name,
+         contacts_name,
+         contacts_phone,
+         agent_mail,
+         agent_province,
+         agent_city,
+         agent_area,
+         agent_address,
+         parent_agentId,
+         create_time,
+         profit_point,
+         agent_level,
+         bank_name,
+         bank_account,
+         card_name
+        )
+        values
+        (
+        #{agentName},
+        #{nickName},
+        #{contactsName},
+        #{contactsPhone},
+        #{agentMail},
+        #{agentProvince},
+        #{agentCity},
+        #{agentArea},
+        #{agentAddress},
+        #{parentAgentId},
+        NOW(),
+        #{profitPoint},
+        #{agentLevel},
+        #{bankName},
+        #{bankAccount},
+        #{cardName}
+        )
+    </insert>
+
+
+    <select id="lowerAgentList" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.SysAgent">
+        select
+        agent_id as agentId,
+        agent_name as agentName ,
+        nick_name as nickName,
+        contacts_name as contactsName,
+        contacts_phone as contactsPhone,
+        agent_mail as agentMail,
+        agent_province as agentProvince,
+        agent_city as agentCity,
+        agent_area as agentArea,
+        agent_address as agentAddress,
+        parent_agentId as parentAgentId,
+        create_time as createTime,
+        profit_point as profitPoint,
+        agent_level as agentLevel,
+        delete_flag as deleteFlag,
+        bank_name as bankName,
+        card_name as cardName,
+        bank_account as bankAccount
+        from sys_agent
+        where parent_agentId = #{loginAgentId}
+        <if test="agentId != null and agentId != ''">
+            and agent_id like CONCAT('%',#{agentId},'%')
+        </if>
+        <if test="agentName != null and agentName != ''">
+            and agent_name like CONCAT('%',#{agentName},'%')
+        </if>
+    </select>
+
+
+    <update id="lowerAgentSwitch" parameterType="com.vicmob.domain.PageData">
+        update sys_agent
+        set delete_flag = #{deleteFlag}
+        where agent_id = #{agentId}
+    </update>
+
+    <update id="lowerAgentEdit" parameterType="com.vicmob.domain.SysAgent">
+        update sys_agent
+        set
+        agent_name = #{agentName},
+        profit_point =#{profitPoint},
+        contacts_name = #{contactsName},
+        contacts_phone = #{contactsPhone},
+        agent_mail = #{agentMail},
+        agent_province = #{agentProvince},
+        agent_city = #{agentCity},
+        agent_area = #{agentArea},
+        agent_address =#{agentAddress},
+        agent_level = #{agentLevel},
+        bank_name  = #{bankName},
+        bank_account = #{bankAccount},
+        card_name = #{cardName}
+        where agent_id = #{agentId}
+    </update>
+
+
+    <select id="agentShareProfitList" parameterType="com.vicmob.domain.PageData"
+            resultType="com.vicmob.domain.PageData">
+
+        select
+        t2.create_time as createTime,
+        t2.order_no as orderNo,
+        t3.store_name as storeName,
+        t1.balance_accounts as balanceAccounts,
+        t1.alipay_point as alipayPoint,
+        <if test="agentLevel !=null and agentLevel == 1">
+            t1.first_point as point,
+            t1.first_accounts as accounts ,
+            t1.first_status as status,
+        </if>
+        <if test="agentLevel !=null and agentLevel == 2">
+            t1.second_point as point,
+            t1.second_accounts as accounts,
+            t1.second_status as status,
+        </if>
+        <if test="agentLevel !=null and agentLevel == 3">
+            t1.third_point as point ,
+            t1.third_accounts as accounts,
+            t1.third_status as status,
+        </if>
+        t4.agent_id as agentId,
+        t4.agent_name as agentName,
+        t2.pay_type as payType,
+        t2.trade_no as tradeNo
+        from order_benefit t1
+        left join sys_order t2 on t1.order_id=t2.order_id
+        left join sys_store t3 on t1.store_id = t3.store_id
+        left join sys_agent t4 on t3.agent_id = t4.agent_id
+        where
+        <if test="agentLevel !=null and agentLevel == 3">
+            t3.agent_id = #{agentId}
+        </if>
+        <if test="agentLevel !=null and agentLevel == 2">
+            t4.agent_id = #{agentId} or t4.parent_agentId = #{agentId}
+        </if>
+        <if test="agentLevel !=null and agentLevel == 1">
+            t3.agent_id in
+            (
+            select
+            *
+            from (
+            select agent_id from sys_agent where agent_id = #{agentId} or parent_agentId = #{agentId}
+            union
+            select agent_id from sys_agent where parent_agentId in (select agent_id from sys_agent where
+            parent_agentId=#{agentId})
+            )f1
+            )
+        </if>
+
+        <if test="startTime != null and startTime != ''">
+            and t2.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and t2.create_time &lt;= #{endTime}
+        </if>
+        <if test="payType != null ">
+            and t2.pay_type = #{payType}
+        </if>
+        <if test="storeName !=null and storeName != ''">
+            and t3.store_name  like CONCAT('%',#{storeName},'%')
+        </if>
+        <if test="agentName !=null and agentName != ''">
+            and t4.agent_name like CONCAT('%',#{agentName},'%')
+        </if>
+        <if test="nextAgentId !=null and nextAgentId != ''">
+            and t4.agent_id like CONCAT('%',#{nextAgentId},'%')
+        </if>
+
+        <if test="applyStatys !=null and agentLevel == 1">
+            and t1.first_status = #{applyStatys}
+        </if>
+        <if test="applyStatys !=null and agentLevel == 2">
+            and t1.second_status = #{applyStatys}
+        </if>
+        <if test="applyStatys !=null and agentLevel == 3">
+            and t1.third_status = #{applyStatys}
+        </if>
+
+        and t1.delete_flag = 0
+        order by t2.create_time desc
+    </select>
+
+    <select id="agentShareProfitCollect" parameterType="com.vicmob.domain.PageData"
+            resultType="com.vicmob.domain.PageData">
+
+        select
+        <if test="agentLevel !=null and agentLevel == 1">
+            sum(t1.first_accounts) as accounts ,
+            t1.first_status as status,
+        </if>
+        <if test="agentLevel !=null and agentLevel == 2">
+            sum(t1.second_accounts) as accounts,
+            t1.second_status as status,
+        </if>
+        <if test="agentLevel !=null and agentLevel == 3">
+            sum(t1.third_accounts) as accounts,
+            t1.third_status as status,
+        </if>
+        count(1) as num,
+        t2.pay_type as payType
+        from order_benefit t1
+        left join sys_order t2 on t1.order_id=t2.order_id
+        left join sys_store t3 on t1.store_id = t3.store_id
+        where
+        <if test="agentLevel !=null and agentLevel == 3">
+            t3.agent_id = #{agentId}
+        </if>
+        <if test="agentLevel !=null and agentLevel == 2">
+            t3.agent_id in
+            (
+            select
+            agent_id
+            from sys_agent t4
+            where (t4.agent_id = #{agentId} or t4.parent_agentId = #{agentId} )
+            )
+        </if>
+        <if test="agentLevel !=null and agentLevel == 1">
+            t3.agent_id in
+            (
+            select
+            agent_id
+            from
+            (
+            select agent_id from sys_agent where agent_id = #{agentId} or parent_agentId = #{agentId}
+            union
+            select agent_id from sys_agent where parent_agentId in (select agent_id from sys_agent where
+            parent_agentId=#{agentId})
+            )f1
+
+            )
+        </if>
+        and t1.delete_flag = 0
+        <if test="agentLevel !=null and agentLevel == 1">
+            group by t2.pay_type, t1.first_status
+        </if>
+        <if test="agentLevel !=null and agentLevel == 2">
+            group by t2.pay_type,t1.second_status
+        </if>
+        <if test="agentLevel !=null and agentLevel == 3">
+            group by t2.pay_type, t1.third_status
+        </if>
+        order by t2.pay_type
+
+    </select>
+
+
+    <update id="writeOffOrder" parameterType="com.vicmob.domain.PageData">
+        update order_benefit t1 left join sys_order t2 on t1.order_id = t2.order_id
+        set
+        <if test="agentLevel == 3">
+            t1.third_status = 2
+        </if>
+        <if test="agentLevel == 2">
+            t1.second_status = 2
+        </if>
+        <if test="agentLevel == 1">
+            t1.first_status = 2
+        </if>
+        where t2.order_no = #{orderNo}
+    </update>
+
+    <select id="getbenefitMoneyofDay" resultType="Double">
+        select
+        <if test="pd.agentLevel == 1">
+            COALESCE(sum(t1.first_accounts),0) as dayBenefit
+        </if>
+        <if test="pd.agentLevel == 2">
+            COALESCE(sum(t1.second_accounts),0) as dayBenefit
+        </if>
+        <if test="pd.agentLevel == 3">
+            COALESCE( sum(t1.third_accounts),0) as dayBenefit
+        </if>
+        from order_benefit t1
+        left join sys_store t2 on t1.store_id = t2.store_id
+        left join sys_agent t3 on t2.agent_id = t3.agent_id
+        where
+        t3.agent_id = #{pd.agentId}
+        and to_days(t1.create_time) = to_days(now())
+
+    </select>
+    <select id="getbenefitMoneyofMonth" resultType="Double">
+        select
+        <if test="pd.agentLevel == 1">
+            COALESCE(sum(t1.first_accounts),0) as monthBenefit
+        </if>
+        <if test="pd.agentLevel == 2">
+            COALESCE(sum(t1.second_accounts),0) as monthBenefit
+        </if>
+        <if test="pd.agentLevel == 3">
+            COALESCE( sum(t1.third_accounts),0) as monthBenefit
+        </if>
+        from order_benefit t1
+        left join sys_store t2 on t1.store_id = t2.store_id
+        left join sys_agent t3 on t2.agent_id = t3.agent_id
+        where
+        t3.agent_id = #{pd.agentId}
+        and DATE_FORMAT( t1.create_time, '%Y%m' ) = DATE_FORMAT( CURDATE( ) , '%Y%m' )
+    </select>
+    <select id="getbenefitMoneyTotal" resultType="Double">
+        select
+        <if test="pd.agentLevel == 1">
+            COALESCE(sum(t1.first_accounts),0) as  totalBenefit
+        </if>
+        <if test="pd.agentLevel == 2">
+            COALESCE(sum(t1.second_accounts),0) as totalBenefit
+        </if>
+        <if test="pd.agentLevel == 3">
+            COALESCE( sum(t1.third_accounts),0) as totalBenefit
+        </if>
+        from order_benefit t1
+        left join sys_store t2 on t1.store_id = t2.store_id
+        left join sys_agent t3 on t2.agent_id = t3.agent_id
+        where t3.agent_id = #{pd.agentId}
+    </select>
+
+    <select id="getOrderMoneyofDay" resultType="Double">
+        select
+         COALESCE(sum(t1.balance_accounts),0) as dayMoney
+        from sys_order t1
+        left join sys_store t3 on t1.store_id = t3.store_id
+        left join sys_agent t4 on t3.agent_id = t4.agent_id
+        where
+        t4.agent_id = #{id}
+        and t1.pay_status = 1
+        and to_days(t1.create_time) = to_days(now())
+    </select>
+
+    <select id="getOrderMoneyofMonth" resultType="Double">
+        select
+        COALESCE(sum(t1.balance_accounts),0) as monthMoney
+        from sys_order t1
+        left join sys_store t3 on t1.store_id = t3.store_id
+        left join sys_agent t4 on t3.agent_id = t4.agent_id
+        where
+        t4.agent_id = #{id}
+        and t1.pay_status = 1
+        and DATE_FORMAT( t1.create_time, '%Y%m' ) = DATE_FORMAT( CURDATE( ) , '%Y%m' )
+    </select>
+
+    <select id="getOrderMoneyTotal" resultType="Double">
+        select
+        COALESCE(sum(t1.balance_accounts),0) as totalMoney
+        from sys_order t1
+        left join sys_store t3 on t1.store_id = t3.store_id
+        left join sys_agent t4 on t3.agent_id = t4.agent_id
+        where
+        t4.agent_id = #{id}
+        and t1.pay_status = 1
+
+    </select>
+
+    <select id="showOrderMoneyMoney" resultType="com.vicmob.domain.PageData">
+        select
+		COALESCE(sum(money),0) as moneys ,
+        days
+        from
+        (
+              select
+              t1.balance_accounts as money,
+              day(t1.create_time) as days
+              from sys_order t1
+              left join sys_store t3 on t1.store_id = t3.store_id
+              left join sys_agent t4 on t3.agent_id = t4.agent_id
+              where
+              t4.agent_id = #{ pd.id }
+              and t1.pay_status = 1
+              and year(t1.create_time) = year( CURDATE( ))
+              and month( t1.create_time ) = #{pd.monthNo}
+           ) t4
+        group by t4.days;
+    </select>
+
+    <select id="showBenefitMoneyMoney" resultType="com.vicmob.domain.PageData">
+        select
+        COALESCE(sum(money),0) as moneys ,
+        days
+        from
+        (
+             select
+             <if test="pd.agentLevel == 1">
+                t1.first_accounts as money,
+                day(t1.create_time) as days
+              </if>
+             <if test="pd.agentLevel == 2">
+                t1.second_accounts as money,
+                 day(t1.create_time) as days
+              </if>
+             <if test="pd.agentLevel == 3">
+                t1.third_accounts as money,
+                day(t1.create_time) as days
+              </if>
+              from order_benefit t1
+              left join sys_store t2 on t1.store_id = t2.store_id
+              left join sys_agent t3 on t2.agent_id = t3.agent_id
+              where t3.agent_id = #{pd.agentId}
+              and year(t1.create_time) = year(CURDATE( ))
+              and month( t1.create_time ) = #{pd.monthNo}
+           ) t4
+        group by t4.days;
+
+    </select>
+
+
+</mapper>

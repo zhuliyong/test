@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+    <outputHeaders>订单时间,订单编号,设备编号,支付方式,交易金额,支付宝返点(%),上级返点(%),分润金额(含税*元）,提现状态</outputHeaders>
+    <TemplateTite>storeorderdetail.xls</TemplateTite>
+    <outputOrder>支付时间,订单编号,交易单号,终端设备号,支付类型,支付状态,订单金额,手续费,清算金额,费率</outputOrder>
+    <ordeTemplateTite>orderList.xls</ordeTemplateTite>
+
+
+</xml>

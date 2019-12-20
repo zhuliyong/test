@@ -1,0 +1,62 @@
+server:
+  port: 6101
+  servlet:
+    context-path: /api
+spring:
+  application:
+    name: server
+  sleuth:
+    sampler:
+      probability: 1
+  zipkin:
+    base-url: http://localhost:6201
+  redis:
+    database:
+    host:
+    port:
+    password:
+  servlet:
+    multipart:
+      max-file-size: 30Mb
+      max-request-size: 30Mb
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:6001/eureka/
+    healthcheck:
+      # 开启健康检查（需要spring-boot-starter-actuator依赖）
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 续约更新时间间隔（默认30秒）
+    lease-renewal-interval-in-seconds: 5
+    # 续约到期时间（默认90秒）
+    lease-expiration-duration-in-seconds: 15
+zuul:
+  add-host-header: true
+  ignored-services: "*"
+  host:
+    connect-timeout-millis: 12000
+    socket-timeout-millis: 12000
+  routes:
+    payagent:
+      path: /payagent/**
+      serviceId: payagentv2
+    paystore:
+      path: /paystore/**
+      serviceId: paystorev2
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeout-in-milliseconds: 12000
+ribbon:
+  ReadTimeout: 20000
+  ConnectTimeout: 20000
+  eureka:
+    enable: true
+swagger:
+  enable: true #是否开启swagger

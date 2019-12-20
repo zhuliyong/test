@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.SysStoreMapper">
+
+
+    <select id="findById" parameterType="Integer" resultType="com.vicmob.domain.SysStore">
+        select
+        store_id as storeId,
+        store_name as storeName,
+        store_province as storeProvince,
+        store_city as storeCity,
+        store_area as storeArea,
+        store_address as storeAddress,
+        store_mail as storeMail,
+        agent_id as agentId,
+        create_time as createTime,
+        contacts_name as contactsName,
+        contacts_phone as contactsPhone,
+        nick_name as nickName,
+        store_point as storePoint
+        from sys_store
+        where store_id = #{storeId}
+        and delete_flag = 0
+    </select>
+
+    <select id="findByStoreId" parameterType="Integer" resultType="com.vicmob.domain.PageData">
+        select
+        t2.store_id as storeId,
+        t2.store_name as storeName,
+        t2.store_province as storeProvince,
+        t2.store_city as storeCity,
+        t2.store_area as storeArea,
+        t2.store_address as storeAddress,
+        t2.store_mail as storeMail,
+        t2.agent_id as agentId,
+        t2.create_time as createTime,
+        t2.contacts_name as contactsName,
+        t2.contacts_phone as contactsPhone,
+        t2.nick_name as nickName,
+        t3.alistore_id as alistoreId,
+        t4.wxstore_id as wxstoreId,
+        t2.store_point as storePoint,
+        t3.seller_id as sellerId,
+        t3.app_auth_token as appAuthToken,
+        t3.contract_rate as alicontractRate,
+        t4.contract_rate as wxcontractRate,
+        t4.sub_mchId as subMchId,
+        t2.store_point as profitPoint,
+        l5.f_id as fId,
+        l5.mchnt_cd as mchntCd,
+        l5.contract_rate as fucontractRate
+        from  sys_store t2
+        left join store_alipay t3 on t2.store_id = t3.store_id
+        left join store_wxpay t4 on t4.store_id = t2.store_id
+        left join store_fuioupay l5 on l5.store_id = t2.store_id
+        where t2.store_id = #{storeId}
+    </select>
+
+
+    <select id="showTodayOrders" parameterType="Integer" resultType="Integer">
+        select
+        count(1) as num
+        from  sys_order  t1
+        where t1.sn_no in
+        (
+         select
+         t2.sn_no
+         from sys_device t2
+         where t2.store_id = #{storeId}
+        )
+        and t1.pay_status = 1
+        and to_days(t1.create_time) = to_days(now())
+    </select>
+
+
+    <select id="showMounsOrders" parameterType="Integer" resultType="com.vicmob.domain.PageData">
+        select
+        count(1) as num ,
+        ifnull(sum(t1.balance_accounts),0)  as accounts
+        from  sys_order  t1
+        where t1.sn_no in
+        (
+         select
+         t2.sn_no
+         from sys_device t2
+         where t2.store_id = #{storeId}
+        )
+        and t1.pay_status = 1
+        and DATE_FORMAT( t1.create_time, '%Y%m' ) = DATE_FORMAT( CURDATE( ) , '%Y%m' )
+    </select>
+
+    <select id="showMounsOrdersDetail" parameterType="Integer" resultType="com.vicmob.domain.PageData">
+        select
+		count(ct) as  num ,
+        ct as createTime
+        from
+        (
+                select
+				date_format(t1.create_time, '%d') as ct
+                from  sys_order  t1
+                where  t1.sn_no in
+               (
+                select
+                t2.sn_no
+                from sys_device t2
+                where t2.store_id = #{storeId}
+               )
+                and t1.pay_status = 1
+                and DATE_FORMAT( t1.create_time, '%Y%m' ) = DATE_FORMAT( CURDATE( ) , '%Y%m' )
+				group by   t1.create_time
+           ) t4
+        group by t4.ct;
+    </select>
+</mapper>

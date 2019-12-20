@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.SysOrdersMapper">
+
+    <select id="orderSumByAgentId" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+
+        select
+        a1.store_id as storeId,
+        a1.store_name as storeName,
+        sum(a1.balance_accounts) as orderAmount ,
+        count(a1.balance_accounts) as orderCount
+        FROM
+        (
+        select
+        t3.store_id,
+        t3.store_name,
+        t1.balance_accounts
+        from sys_order t1
+        left join sys_device t2 on t1.sn_no = t2.sn_no
+        left join sys_store t3 on t3.store_id = t2.store_id
+        where t3.agent_id in
+        (
+          select
+          agent_id
+          from
+          (
+              select agent_id from sys_agent where agent_id = #{agentId} or parent_agentId = #{agentId}
+              union
+              select agent_id from sys_agent where parent_agentId in (select agent_id from sys_agent where
+              parent_agentId=#{agentId})
+          )f1
+        )
+        and t1.pay_status = 1
+
+        <if test="startTime != null and startTime != '' ">
+            and t1.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            and t1.create_time &lt;= #{endTime}
+        </if>
+        ) a1
+        <where>
+            <if test="storeId != null and storeId!= '' ">
+                a1.store_id LIKE CONCAT('%',#{storeId},'%')
+            </if>
+        </where>
+        group by a1.store_id,a1.store_name
+        order by a1.store_id
+    </select>
+
+    <select id="payTypeSumByStoreId" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+        select
+        t1.pay_type as payType,
+        sum(t1.balance_accounts) as orderAmount,
+        count(1) as orderCount
+        from sys_order t1
+        left join sys_device t2 on t1.sn_no = t2.sn_no
+        where t2.store_id = #{storeId}
+        <if test="startTime != null and startTime != '' ">
+            and t1.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            and t1.create_time &lt;= #{endTime}
+        </if>
+        <if test="payType != null ">
+            and t1.pay_type = #{payType}
+        </if>
+        and  t1.pay_status = 1
+        group by t1.pay_type
+    </select>
+
+    <select id="findAgentOrderList" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+        select
+        t1.create_time as createTime,
+        t1.pay_type as payType,
+        t1.order_no as orderNo,
+        t2.store_id as storeId,
+        t1.sn_no as snNo,
+        t3.agent_id as agentId,
+        t1.balance_accounts as balanceAccounts,
+        t1.pay_status as payStatus,
+        t1.trade_no as tradeNo,
+        t3.channel_name as channelName,
+        t3.store_name as storeName
+        from sys_order t1
+        left join sys_device t2 on t1.sn_no = t2.sn_no
+        left join sys_store t3 on t2.store_id = t3.store_id
+        where t3.agent_id in
+        (
+        select
+        agent_id
+        from
+        (
+            select agent_id from sys_agent where agent_id = #{loginAgentId} or parent_agentId = #{loginAgentId}
+            union
+            select agent_id from sys_agent where parent_agentId in (select agent_id from sys_agent where
+            parent_agentId=#{loginAgentId})
+        )f1
+        )
+        and t1.delete_flag = 0
+        <if test="storeId != null and storeId != '' ">
+            and t2.store_id like CONCAT('%',#{storeId},'%')
+        </if>
+        <if test="agentId != null and agentId != ''  ">
+            and t3.agent_id like CONCAT('%',#{agentId},'%')
+        </if>
+        <if test="orderNo != null and orderNo != '' ">
+            and t1.order_no like CONCAT('%',#{orderNo},'%')
+        </if>
+
+        <if test="startTime != null and startTime != '' ">
+            and t1.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            and t1.create_time &lt;= #{endTime}
+        </if>
+        <if test="payType != null">
+            and t1.pay_type = #{payType}
+        </if>
+        <if test="channelName != null and channelName != ''">
+            and t3.channel_name = #{channelName}
+        </if>
+        <if test="storeName != null and storeName != ''">
+            and t3.store_name like CONCAT('%',#{storeName},'%')
+        </if>
+
+        order by t1.create_time desc
+
+    </select>
+
+
+</mapper>

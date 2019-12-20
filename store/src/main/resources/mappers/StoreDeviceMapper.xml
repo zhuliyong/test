@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.StoreDeviceMapper">
+
+
+    <select id="findList" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.SysDevice">
+         select
+         device_id as  deviceId,
+         sn_no as snNo ,
+         device_description as deviceDescription,
+         create_time as createTime,
+         store_id as storeId,
+         login_no as loginNo,
+         delete_flag as deleteFlag,
+         device_type as deviceType,
+         channel_name as channelName,
+         terminal_id as terminalId
+         from  sys_device
+         where store_id = #{storeId}
+         and delete_flag = 0
+        <if test="startTime != null and startTime != '' ">
+            and create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            and create_time &lt;= #{endTime}
+        </if>
+        <if test="snNo != null and snNo != '' ">
+            and sn_no like CONCAT('%',#{snNo},'%')
+        </if>
+         order by create_time desc
+    </select>
+
+    <insert id="insert" parameterType="com.vicmob.domain.SysDevice" useGeneratedKeys="true" keyProperty="deviceId">
+        insert into sys_device
+        (
+        sn_no,
+        login_no,
+        device_description,
+        create_time,
+        <if test="storeId!=null">
+            store_id,
+        </if>
+        provide_id,
+        device_type,
+        delete_flag,
+        channel_name,
+        terminal_id
+        )
+        values
+        (
+        #{snNo},
+        #{loginNo},
+        #{deviceDescription},
+        NOW(),
+        <if test="storeId!=null">
+            #{storeId},
+        </if>
+        #{provideId},
+        #{deviceType},
+        0,
+        #{channelName},
+        #{terminalId}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.vicmob.domain.SysDevice">
+        update sys_device
+        set
+        <if test="storeId != null">
+            store_id = #{storeId},
+        </if>
+        <if test="deviceType != null">
+            device_type = #{deviceType},
+        </if>
+        <if test="deleteFlag != null">
+            delete_flag = #{deleteFlag},
+        </if>
+        sn_no = #{snNo},
+        device_description = #{deviceDescription},
+        terminal_id = #{terminalId},
+        channel_name = #{channelName}
+        where device_id = #{deviceId}
+    </update>
+
+    <select id="findBySN" parameterType="String" resultType="Integer">
+        select count(1) from sys_device where sn_no = #{snNo}
+    </select>
+
+    <select id="findfromSysSnno" parameterType="String" resultType="Integer">
+           select count(1) from sys_snno where sn_no = #{snNo}
+     </select>
+
+    <select id="findByDeviceId" parameterType="Integer" resultType="com.vicmob.domain.SysDevice">
+          select
+           sn_no as snNo ,
+           terminal_id as terminalId
+          from sys_device
+          where device_id =#{deviceId}
+          and delete_flag = 0
+     </select>
+
+    <select id="findDeviceByterminalId"  parameterType="String" resultType="Integer">
+        select count(1) from sys_device where terminal_id = #{terminalId} and delete_flag = 0
+    </select>
+
+</mapper>

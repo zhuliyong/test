@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.SysStoresMapper">
+
+
+    <insert id="insert" parameterType="com.vicmob.domain.SysStore" useGeneratedKeys="true" keyProperty="storeId">
+        insert into sys_store
+        (
+        store_name,
+        store_province,
+        store_city,
+        store_area,
+        store_address,
+        store_mail,
+        agent_id,
+        create_time,
+        contacts_name,
+        contacts_phone,
+        review_status,
+        rar_path,
+        nick_name,
+        channel_name
+        <if test="storePoint != null">
+            , store_point
+        </if>
+        )
+        values
+        (
+        #{storeName},
+        #{storeProvince},
+        #{storeCity},
+        #{storeArea},
+        #{storeAddress},
+        #{storeMail},
+        #{agentId},
+        NOW(),
+        #{contactsName},
+        #{contactsPhone},
+        #{reviewStatus},
+        #{rarPath},
+        #{nickName},
+        #{channelName}
+        <if test="storePoint != null">
+            , #{storePoint}
+        </if>
+        )
+
+    </insert>
+
+    <update id="update" parameterType="com.vicmob.domain.SysStore">
+        update sys_store
+        set
+         store_name = #{storeName},
+         store_province =#{storeProvince},
+         store_city =#{storeCity},
+         store_area = #{storeArea},
+         store_address = #{storeAddress},
+         store_mail = #{storeMail},
+         contacts_name =#{contactsName},
+         contacts_phone =#{contactsPhone},
+         store_province = #{storeProvince},
+         store_point = #{storePoint},
+         review_status = #{reviewStatus},
+         rar_path = #{rarPath},
+         channel_name = #{channelName}
+         where store_id = #{storeId}
+
+
+    </update>
+
+    <select id="findStoreByStoreId" parameterType="Integer" resultType="com.vicmob.domain.PageData">
+         select
+        l1.store_id as storeId ,
+        l1.store_name as storeName,
+        l2.agent_id as agentId,
+        l2.agent_name as agentName ,
+        l1.create_time as createTime,
+        l1.delete_flag as deleteFlag,
+        l1.nick_name as nickName,
+        l1.store_province as storeProvince,
+        l1.store_city as storeCity,
+        l1.store_area as storeArea,
+        l1.store_address as storeAddress,
+        l1.store_mail as storeMail,
+        l1.contacts_name as contactsName,
+        l1.contacts_phone as contactsPhone,
+        l3.seller_id as sellerId,
+        l3.alistore_id as alistoreId,
+        l3.app_auth_token as appAuthToken,
+        l3.contract_rate as alicontractRate,
+        l4.contract_rate as wxcontractRate,
+        l4.wxstore_id as wxstoreId,
+        l4.sub_mchId as subMchId,
+        l1.store_point as profitPoint,
+        l1.review_status,
+        l1.rar_path,
+        l1.channel_name as channelName,
+        l5.f_id as fId,
+        l5.mchnt_cd as mchntCd,
+        l5.contract_rate as fucontractRate
+        from sys_store l1
+        left join sys_agent l2 on l1.agent_id = l2.agent_id
+        left join store_alipay l3 on l1.store_id = l3.store_id
+        left join store_wxpay l4 on l4.store_id = l1.store_id
+        left join store_fuioupay l5 on l5.store_id = l1.store_id
+        where l1.store_id = #{storeId}
+    </select>
+
+    <select id="findPageByAgentId" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+
+        select
+        l1.store_id as storeId ,
+        l1.store_name as storeName,
+        l2.agent_id as agentId,
+        l2.agent_name as agentName ,
+        l1.create_time as createTime,
+        l1.delete_flag as deleteFlag,
+        l1.nick_name as nickName,
+        l1.store_province as storeProvince,
+        l1.store_city as storeCity,
+        l1.store_area as storeArea,
+        l1.store_address as storeAddress,
+        l1.store_mail as storeMail,
+        l1.contacts_name as contactsName,
+        l1.contacts_phone as contactsPhone,
+        l1.delete_flag as deleteFlag,
+        l1.store_point as profitPoint,
+        l1.review_status as reviewStatus,
+        l1.rar_path as rarPath,
+        l1.channel_name as channelName
+        from sys_store l1
+        left join sys_agent l2 on l1.agent_id = l2.agent_id
+        where
+        l1.agent_id in
+        (
+        select
+        *
+        from (
+        select agent_id from sys_agent where agent_id = #{agentId} or parent_agentId = #{agentId}
+        union
+        select agent_id from sys_agent where parent_agentId in (select agent_id from sys_agent where
+        parent_agentId=#{agentId})
+        )f1
+        )
+        <if test="storeId != null and storeId != '' ">
+            and l1.store_id like CONCAT('%',#{storeId},'%')
+        </if>
+        <if test="storeName != null and  storeName != ''">
+            and l1.store_name like CONCAT('%',#{storeName},'%')
+        </if>
+        <if test="reviewStatus != null">
+            and l1.review_status = #{reviewStatus}
+        </if>
+        <if test="channelName != null and channelName!= ''">
+            and l1.channel_name = #{channelName}
+        </if>
+        order by l1.create_time desc
+    </select>
+
+    <select id="findStoreByAgentId" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+
+        select
+        l1.store_id as storeId ,
+        l1.store_name as storeName,
+        l2.agent_id as agentId,
+        l2.agent_name as agentName ,
+        l1.create_time as createTime,
+        l1.delete_flag as deleteFlag,
+        l1.store_address as storeAddress,
+        l1.store_mail as storeMail,
+        l1.contacts_name as contactsName,
+        l1.contacts_phone as contactsPhone,
+        l1.delete_flag as deleteFlag
+        from sys_store l1
+        LEFT JOIN sys_agent l2 on l1.agent_id = l2.agent_id
+        where l1.agent_id = #{agentId}
+        <if test="storeId != null and storeId!=''">
+            and l1.store_id like CONCAT('%',#{storeId},'%')
+        </if>
+        <if test="storeName != null and storeName!=''">
+            and l1.store_name like CONCAT('%',#{storeName},'%')
+        </if>
+        order by l1.create_time desc
+    </select>
+
+
+    <update id="stopStore" parameterType="com.vicmob.domain.PageData">
+        update sys_store set delete_flag = #{deleteFlag} where store_id = #{storeId}
+    </update>
+
+
+    <insert id="addAliPayMethod" parameterType="com.vicmob.domain.PageData">
+        insert into store_alipay
+        (
+        seller_id,
+        app_auth_token,
+        store_id,
+        contract_rate
+        )
+        values
+        (
+        #{sellerId},
+        #{appAuthToken},
+        #{storeId},
+        #{contractRate}
+        )
+    </insert>
+
+
+    <insert id="addWxPayMethod" parameterType="com.vicmob.domain.PageData">
+        insert into store_wxpay
+        (
+        store_id,
+        contract_rate,
+        sub_mchId
+        )
+        values
+        (
+        #{storeId},
+        #{contractRate},
+        #{subMchId}
+        )
+    </insert>
+
+    <delete id="deleteAliPayMethod" parameterType="Integer">
+        delete from store_alipay where alistore_id = #{alistoreId}
+    </delete>
+
+    <delete id="deleteWxPayMethod" parameterType="Integer">
+        delete from store_wxpay where wxstore_id = #{wxstoreId}
+    </delete>
+
+    <update id="updateAliPayMethod" parameterType="com.vicmob.domain.PageData">
+        update store_alipay
+        set seller_id =#{sellerId},
+        app_auth_token =#{appAuthToken},
+        contract_rate = #{contractRate}
+        where alistore_id = #{alistoreId}
+    </update>
+
+    <update id="updateWxPayMethod" parameterType="com.vicmob.domain.PageData">
+        update store_wxpay
+        set
+        contract_rate = #{contractRate},
+        sub_mchId = #{subMchId}
+        where wxstore_id = #{wxstoreId}
+    </update>
+
+    <select id="staticDeviceOrder"  parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+        select
+        t1.create_time as createTime,
+        max(t1.balance_accounts)as money,
+        t1.order_no as orderNo,
+        t1.sn_no as snNo,
+        t1.store_id as storeId,
+        t1.store_name as storeName,
+        t1.buyerId
+        FROM
+        (
+        select
+        f1.create_time,
+        concat(month(f1.create_time), day(f1.create_time)) as md,
+        f1.sn_no,
+        f1.order_no,
+        f1.balance_accounts,
+        f1.buyer_user_id,
+        f2.store_id,
+        f2.store_name,
+        f1.buyer_user_id as buyerId
+        from
+        (
+        select * from  sys_order
+        where pay_status = 1
+        and balance_accounts > 20
+        <if test="snNo != null and snNo != ''" >
+             and sn_no  like CONCAT('%', #{snNo},'%')
+        </if>
+        <if test="startTime != null and startTime != '' ">
+            and create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            and create_time &lt;= #{endTime}
+        </if>
+
+        )f1
+        left join  sys_store  f2 on f1.store_id = f2.store_id
+        where f2.agent_id in
+        (
+        select agent_id from sys_agent where agent_id = #{loginAgentId} or parent_agentId = #{loginAgentId}
+        union
+        select agent_id from sys_agent where parent_agentId
+        in (select agent_id from sys_agent where parent_agentId= #{loginAgentId})
+        )
+
+        )t1
+        group by t1.md, t1.buyer_user_id ,t1.sn_no
+        order by t1.sn_no ,t1.create_time desc
+    </select>
+
+
+
+</mapper>

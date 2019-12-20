@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vicmob.mapper.StoreOrderMapper">
+
+
+    <select id="findList" parameterType="Integer" resultType="com.vicmob.domain.SysOrder">
+        select
+        t1.order_id as orderId,
+        t1.trade_no as tradeNo,
+        t1.order_no as orderNo,
+        t1.sn_no as snNo,
+        t1.create_time as createTime,
+        t1.refund_time as refundTime,
+        t1.pay_time as payTime,
+        t1.balance_accounts as balanceAccounts,
+        t1.pay_type as payType,
+        t1.pay_status as payStatus,
+        t1.trade_no as tradeNo,
+        t1.buyer_user_id as buyerUserId,
+        t1.buyer_login_id as buyerLoginId
+        from
+        sys_order t1
+        where t1.store_id = #{storeId}
+        <if test="startTime != null and startTime != '' ">
+            and t1.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            and t1.create_time &lt;= #{endTime}
+        </if>
+        <if test="snNo != null and snNo != '' ">
+            and t1.sn_no like CONCAT('%',#{snNo},'%')
+        </if>
+        <if test="payStatus != null  ">
+            and t1.pay_status = #{payStatus}
+        </if>
+        order by t1.create_time desc
+    </select>
+
+
+    <!--商户分润列表-->
+    <select id="storeShareProfitList" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+
+        select
+        t2.create_time as createTime,
+        t2.order_no as orderNo,
+        t2.sn_no as snNo,
+        t1.balance_accounts as balanceAccounts,
+        t1.alipay_point as alipayPoint,
+        t1.store_point  as point ,
+        t1.store_accounts as accounts,
+        t2.pay_type as payType,
+        t2.trade_no as tradeNo,
+        t1.store_status as status
+        from  order_benefit t1
+        left join sys_order t2 on t1.order_id=t2.order_id
+        where t1.store_id = #{storeId}
+        <if test="startTime != null and startTime != ''">
+            and t2.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and t2.create_time &lt;= #{endTime}
+        </if>
+        <if test="payType != null ">
+            and t2.pay_type = #{payType}
+        </if>
+        <if test="applyStatys != null ">
+            and t1.store_status = #{applyStatys}
+        </if>
+        order by t2.create_time desc
+
+    </select>
+
+    <select id="storeShareProfitCollect" parameterType="Integer" resultType="com.vicmob.domain.PageData">
+        select
+        sum(t1.store_accounts) as accounts,
+        t2.pay_type as payType,
+        t1.store_status as  status,
+        count(1) as num
+        from  order_benefit t1
+        left join sys_order t2 on t1.order_id=t2.order_id
+        where t1.store_id = #{storeId}
+        group by  t2.pay_type ,t1.store_status
+        order by t2.pay_type
+    </select>
+
+    <update id="writeOffOrder" parameterType="String">
+        update order_benefit t1 left join sys_order t2 on t1.order_id = t2.order_id
+        set
+        t1.store_status = 2
+        where t2.order_no = #{orderNo}
+    </update>
+
+    <select id="orderCollect" parameterType="com.vicmob.domain.PageData" resultType="com.vicmob.domain.PageData">
+
+        select
+        sum(balance_accounts) as money,
+        count(1) as num,
+        pay_type as payType,
+        pay_status as payStatus
+        from sys_order
+        where store_id = #{storeId}
+        <if test="startTime != null and startTime != ''">
+            and create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and create_time &lt;= #{endTime}
+        </if>
+        GROUP BY pay_type,pay_status
+
+    </select>
+
+
+    <select id="getStoreAlicontractRate" resultType="Double" parameterType="Integer">
+        select
+        contract_rate  as contractRate
+        from store_alipay
+        where store_id = #{storeId}
+    </select>
+
+
+    <select id="getStoreWXcontractRate" resultType="Double" parameterType="Integer">
+        select
+        contract_rate  as contractRate
+        from store_wxpay
+        where store_id = #{storeId}
+    </select>
+
+    <select id="getStoreFuioucontractRate" resultType="Double" parameterType="Integer">
+        select
+        contract_rate  as contractRate
+        from store_fuioupay
+        where store_id = #{storeId}
+    </select>
+
+
+
+</mapper>
