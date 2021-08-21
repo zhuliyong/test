@@ -18,7 +18,7 @@ public class CorsConfig {
     public CorsFilter corsFilter(){
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
+        System.out.println("111");
         final CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true); // 允许cookies跨域
         config.addAllowedOrigin("*");// #允许向该服务器提交请求的URI，*表示全部允许，在SpringMVC中，如果设成*，会自动转成当前请求头中的Origin
