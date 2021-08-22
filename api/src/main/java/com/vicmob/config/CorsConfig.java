@@ -17,6 +17,7 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter(){
 
+        System.out.println("20210822");
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         System.out.println("111");
         final CorsConfiguration config = new CorsConfiguration();
