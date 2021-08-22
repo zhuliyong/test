@@ -17,9 +17,9 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter(){
 
-        System.out.println("20210822");
+        System.out.println("hahahha");
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        System.out.println("111");
+        System.out.println("tokenb");
         final CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true); // 允许cookies跨域
         config.addAllowedOrigin("*");// #允许向该服务器提交请求的URI，*表示全部允许，在SpringMVC中，如果设成*，会自动转成当前请求头中的Origin
