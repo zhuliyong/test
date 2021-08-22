@@ -17,7 +17,7 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter(){
 
-        System.out.println("ha1122ha2221hha");
+        System.out.println("55566");
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         System.out.println("tokenb");
         final CorsConfiguration config = new CorsConfiguration();
